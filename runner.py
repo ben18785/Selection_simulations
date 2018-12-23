@@ -27,12 +27,13 @@ from joblib import Parallel, delayed
 # and frequency dependence to use
 # because the below parallel code only works with functions
 # that accept single inputs
+s = 1
 def runIterate(i):
     vMu = [0.004, 0.008, 0.016, 0.032, 0.064, 0.128,
            0.004, 0.008, 0.016, 0.032, 0.064, 0.128,
            0.004, 0.008, 0.016, 0.032, 0.064, 0.128]
-    vBeta = [10, 10, 10, 10, 10, 10,
-             -10, -10, -10, -10, -10, -10,
+    vBeta = [s, s, s, s, s, s,
+             -s, -s, -s, -s, -s, -s,
              0, 0, 0, 0, 0, 0]
     return FrequencyDependent.replicates(i, "./Results/testFreqMean", 5, 1000,
                                          250, vMu[i], vBeta[i], 250)

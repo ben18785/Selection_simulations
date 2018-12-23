@@ -7,15 +7,9 @@ import numpy as np
 def populationReproduceFrequency(aPopulation, aMu0, aBeta):
     bPopulation = Bentley.Population()
     bPopulation.setMax(aPopulation.getMax())
-    lParents = aPopulation.getIndividuals()
     aPopSize = aPopulation.getPopSize()
-    cnt = aPopulation.getAllFreq()
-    parent_weight = np.zeros(aPopSize)
-    # cnt[parent] / aPopSize is the frequency of the parental variant
-    for i, parent in enumerate(lParents):
-        parent_weight[i] = 1 + (float(cnt[parent]) / aPopSize) * aBeta
-    # normalise parent weight
-    parent_weight = parent_weight / np.sum(parent_weight)
+    lParents = aPopulation.getIndividuals()
+    parent_weight = calculate_weight(aPopulation, lParents, aPopSize, aBeta)
     for i in range(0, aPopSize):
         aRand = np.random.choice(aPopSize, size=1, p=parent_weight)[0]
         aIndividual = Bentley.createOffspring(lParents[aRand], aMu0,
@@ -48,3 +42,15 @@ def replicates(i, bName, aNumIter, aNumGenerations, aPopSize, aMu0, aBeta,
         lTemp = Bentley.getCounts(lTest)
         aName = bName + str(i) + "_" + str(j) + ".csv"
         lTemp.to_csv(aName, sep=',')
+
+
+def calculate_weight(aPopulation, lParents, aPopSize, aBeta):
+    cnt = aPopulation.getAllFreq()
+    parent_weight = np.zeros(aPopSize)
+    # cnt[parent] / aPopSize is the frequency of the parental variant
+    for i, parent in enumerate(lParents):
+        parent_weight[i] = (1 + (float(cnt[parent.getNumber()]) / aPopSize)
+                            * aBeta)
+    # normalise parent weight
+    parent_weight = parent_weight / np.sum(parent_weight)
+    return parent_weight
