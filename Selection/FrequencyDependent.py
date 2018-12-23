@@ -21,6 +21,7 @@ def populationReproduceFrequency(aPopulation, aMu0, aBeta):
         aIndividual = Bentley.createOffspring(lParents[aRand], aMu0,
                                               bPopulation)
         bPopulation.addIndividual(aIndividual)
+    bPopulation.calculateAllFreq()
     return bPopulation
 
 
