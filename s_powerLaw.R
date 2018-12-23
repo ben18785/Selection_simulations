@@ -107,15 +107,17 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-g1<- ggplot(aBigDF_negative,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(10^-6,1)) + 
+aMin <- 10^(-5)
+g1<- ggplot(aBigDF_negative,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(aMin,1)) + 
   geom_smooth(se=F) + xlab('number of copies of variant') + ylab('proportion') + labs(colour='mutation rate') + ggtitle('negative frequency dependent selection')
 
-g2<-ggplot(aBigDF_positive,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(10^-6,1)) + 
+g2 <- ggplot(aBigDF_positive,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(aMin,1)) + 
   geom_smooth(se=F) + xlab('number of copies of variant') + ylab('proportion') + labs(colour='mutation rate') + ggtitle('positive frequency dependent selection')
 
-g3 <- ggplot(aBigDF_null,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(10^-6,1)) + 
+g3 <- ggplot(aBigDF_null,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(aMin,1)) + 
   geom_smooth(se=F) + xlab('number of copies of variant') + ylab('proportion') + labs(colour='mutation rate') + ggtitle('neutral')
 
+pdf(file = "frequency_dependent.pdf", width = 10, height = 8)
 multiplot(g2,g3,g1, cols=1)
-ggsave(filename = 'frequencyDependentSelection.pdf',gFinal,width = 8, height = 6)
+dev.off()
 
