@@ -1,15 +1,15 @@
 rm(list=ls())
 library(ggplot2)
-setwd("/Volumes/2nd1TB/Dropbox/Bentley/neutral/src")
-aDF <- read.csv('testFreq.csv',header = F)
-aMax = max(aDF$V2)
-aUpper = log(aMax)/log(10)*2
-lBreaks <- sapply(0:22,function(i) 10^(0.25*i))
-aTest <- hist(aDF$V2,breaks = lBreaks)
-
-aShortDF <- data.frame(proportion=aTest$counts/nrow(aDF),numCopies=aTest$breaks[-1])
-ggplot(aShortDF,aes(x=numCopies,y=proportion)) + geom_point() + scale_x_log10() + scale_y_log10() + 
-  geom_smooth()
+setwd("~/Desktop/Selection_simulations")
+# aDF <- read.csv('testFreq.csv',header = F)
+# aMax = max(aDF$V2)
+# aUpper = log(aMax)/log(10)*2
+# lBreaks <- sapply(0:22,function(i) 10^(0.25*i))
+# aTest <- hist(aDF$V2,breaks = lBreaks)
+# 
+# aShortDF <- data.frame(proportion=aTest$counts/nrow(aDF),numCopies=aTest$breaks[-1])
+# ggplot(aShortDF,aes(x=numCopies,y=proportion)) + geom_point() + scale_x_log10() + scale_y_log10() + 
+#   geom_smooth()
 
 fImport <- function(aName,i,j){
   aFilename <- paste0(aName,i,"_",j,".csv")
@@ -36,7 +36,7 @@ fImportAndAverage <- function(aName,i,aMaxIter){
 
 vMu = c(0.004,0.008,0.016,0.032,0.064,0.128)
 for(i in 1:6){
-  aTempDF <- fImportAndAverage("testBig",(i-1),5)
+  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i-1),5)
   aTempDF$number <- rep(vMu[i],nrow(aTempDF))
   if(i == 1){
     aBigDF <- aTempDF
@@ -44,14 +44,31 @@ for(i in 1:6){
     aBigDF <- rbind.data.frame(aBigDF,aTempDF)
   }
 }
-
-ggplot(aBigDF,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10() + scale_y_log10(limits=c(0.0001,1)) + 
-  geom_smooth(se=F)
-
-
-aBigDF_null <- aBigDF
 aBigDF_positive <- aBigDF
+for(i in 1:6){
+  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i+5),5)
+  aTempDF$number <- rep(vMu[i],nrow(aTempDF))
+  if(i == 1){
+    aBigDF <- aTempDF
+  }else{
+    aBigDF <- rbind.data.frame(aBigDF,aTempDF)
+  }
+}
 aBigDF_negative <- aBigDF
+for(i in 1:6){
+  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i+11),5)
+  aTempDF$number <- rep(vMu[i],nrow(aTempDF))
+  if(i == 1){
+    aBigDF <- aTempDF
+  }else{
+    aBigDF <- rbind.data.frame(aBigDF,aTempDF)
+  }
+}
+aBigDF_null <- aBigDF
+
+
+
+
 
 
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
@@ -90,15 +107,15 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-g1<-ggplot(aBigDF_negative,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(0.0001,1)) + 
+ggplot(aBigDF_negative,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(0.0001,1)) + 
   geom_smooth(se=F) + xlab('number of copies of variant') + ylab('proportion') + labs(colour='mutation rate') + ggtitle('negative frequency dependent selection')
 
-g2<-ggplot(aBigDF_positive,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(0.0001,1)) + 
+ggplot(aBigDF_positive,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(0.0001,1)) + 
   geom_smooth(se=F) + xlab('number of copies of variant') + ylab('proportion') + labs(colour='mutation rate') + ggtitle('positive frequency dependent selection')
 
-g3<-ggplot(aBigDF_null,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(0.0001,1)) + 
+ggplot(aBigDF_null,aes(x=numCopies,y=proportion,colour=as.factor(number))) + geom_point() + scale_x_log10(limits=c(1,1e5)) + scale_y_log10(limits=c(0.0001,1)) + 
   geom_smooth(se=F) + xlab('number of copies of variant') + ylab('proportion') + labs(colour='mutation rate') + ggtitle('neutral')
 
 gFinal <- multiplot(g2,g3,g1, cols=1)
-ggsave(filename = 'frequencyDependentSelection.pdf',gFinal,width = 8, height = 6)
-
+# ggsave(filename = 'frequencyDependentSelection.pdf',gFinal,width = 8, height = 6)
+gFinal
