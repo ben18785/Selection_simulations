@@ -145,3 +145,25 @@ def getCounts(lPops):
     lNumbers = getFlatList(lPops)
     lNumbers = pandas.Series(lNumbers)
     return lNumbers.value_counts()
+
+
+def getCounters(lPops):
+    lCounters = []
+    for pop in lPops:
+        lCounters.append(pop.getAllFreq())
+    return lCounters
+
+
+def time_series(lPops):
+    lCounters = getCounters(lPops)
+    lkeys = list(set(getFlatList(lPops)))
+    aNumGenerations = len(lCounters)
+    aNumKeys = len(lkeys)
+    k = 0
+    aDF = numpy.zeros((aNumGenerations * aNumKeys, 3))
+    for i in range(aNumGenerations):
+        for j, key in enumerate(lkeys):
+            aDF[k, :] = numpy.array([i + 1, key, lCounters[i][key]])
+            k += 1
+    aDF = aDF[aDF[:, 2] != 0, :]
+    return aDF
