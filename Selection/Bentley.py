@@ -16,6 +16,7 @@ class Population:
     def __init__(self):
         self.members = []
         self.max = 0
+        self.cnt = collections.Counter()
 
     def addIndividual(self, aIndividual):
         self.members.append(aIndividual)
@@ -62,12 +63,13 @@ class Population:
     def getMeanVariantFreq(self):
         return (self.getNumberCount() / self.getPopSize()).mean()
 
-    def getAllFreq(self):
-        cnt = collections.Counter()
+    def calculateAllFreq(self):
         for people in self.members:
             a_number = people.getNumber()
-            cnt[a_number] += 1
-        return
+            self.cnt[a_number] += 1
+
+    def getAllFreq(self):
+        return self.cnt
 
 
 def createOffspring(aParent, aMu, aPopulation):
@@ -94,6 +96,7 @@ def createInitialPopulation(aPopSize, aMax):
         aIndividual = Individual(random.randint(1, aMax))
         aPopulation.addIndividual(aIndividual)
     aPopulation.setMax(max(aPopulation.getNumbers()))
+    aPopulation.calculateAllFreq()
     return aPopulation
 
 
@@ -106,6 +109,7 @@ def populationReproduce(aPopulation, aMu):
         aRand = random.randint(0, aPopSize-1)
         aIndividual = createOffspring(lParents[aRand], aMu, bPopulation)
         bPopulation.addIndividual(aIndividual)
+    bPopulation.calculateAllFreq()
     return bPopulation
 
 
