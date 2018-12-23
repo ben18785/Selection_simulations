@@ -19,6 +19,9 @@ def populationReproduceFrequency(aPopulation, aMu0, aBeta):
     return bPopulation
 
 
+# For Moran where you just pick one parent
+
+
 def runAllFrequency(aNumGenerations, aPopSize, aMu0, aBeta, aMax):
     lPops = []
     aInitialPopulation = Bentley.createInitialPopulation(aPopSize, aMax)

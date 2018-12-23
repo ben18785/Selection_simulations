@@ -1,0 +1,28 @@
+---
+title: "Run simulations"
+output: html_notebook
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+library(reticulate)
+FrequencyDependent <- import_from_path("FrequencyDependent", path = "./Selection/")
+Bentley <- import_from_path("Bentley", path = "./Selection/")
+Models <- import_from_path("Models", path = "./Selection/")
+```
+
+Run neutral Wright-Fisher with mutation
+```{r}
+num_generations <- 1000
+pop_size <- 250
+mu <- 0.004
+selection <- 0
+aDF <- Models$WrightFisherRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
+```
+
+Run Moran
+```{r}
+
+```
+
