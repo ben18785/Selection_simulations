@@ -35,7 +35,7 @@ def runIterate(i):
     vBeta = [s, s, s, s, s, s,
              -s, -s, -s, -s, -s, -s,
              0, 0, 0, 0, 0, 0]
-    return FrequencyDependent.replicates(i, "./Results/testFreqMean", 5, 1000,
+    return FrequencyDependent.replicates(i, "./Results/testFreqMean", 20, 1000,
                                          250, vMu[i], vBeta[i], 250)
 
 # running the above in parallel over 12 cores. Replace with the number of

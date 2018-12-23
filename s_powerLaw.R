@@ -1,7 +1,7 @@
 rm(list=ls())
 library(ggplot2)
 setwd("~/Desktop/Selection_simulations")
-# aDF <- read.csv('./Results/testFreqMean12_0.csv',header = F)
+aDF <- read.csv('./Results/testFreqMean12_0.csv',header = F)
 # aMax = max(aDF$V2)
 # aUpper = log(aMax)/log(10)*2
 # lBreaks <- sapply(0:11,function(i) 10^(0.5*i))
@@ -35,8 +35,9 @@ fImportAndAverage <- function(aName,i,aMaxIter){
 }
 
 vMu = c(0.004,0.008,0.016,0.032,0.064,0.128)
+jMax <- 20
 for(i in 1:6){
-  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i-1),5)
+  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i-1),jMax)
   aTempDF$number <- rep(vMu[i],nrow(aTempDF))
   if(i == 1){
     aBigDF <- aTempDF
@@ -46,7 +47,7 @@ for(i in 1:6){
 }
 aBigDF_positive <- aBigDF
 for(i in 1:6){
-  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i+5),5)
+  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i+5),jMax)
   aTempDF$number <- rep(vMu[i],nrow(aTempDF))
   if(i == 1){
     aBigDF <- aTempDF
@@ -56,7 +57,7 @@ for(i in 1:6){
 }
 aBigDF_negative <- aBigDF
 for(i in 1:6){
-  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i+11),5)
+  aTempDF <- fImportAndAverage("./Results/testFreqMean",(i+11),jMax)
   aTempDF$number <- rep(vMu[i],nrow(aTempDF))
   if(i == 1){
     aBigDF <- aTempDF
