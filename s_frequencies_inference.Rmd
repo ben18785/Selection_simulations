@@ -149,6 +149,14 @@ fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
 saveRDS(fit, file = "neutral_example.rds")
 ```
 
+Note that optimizing works really well for this example!
+```{r}
+opt <- optimizing(aModel,data=data_stan,
+                init=initFn)
+```
+
+
+
 # Positive frequency dependence Wright-Fisher with mutation
 Run positive frequency dependence 
 ```{r}
