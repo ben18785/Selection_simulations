@@ -4,25 +4,56 @@ output: html_notebook
 ---
 
 ```{r}
+setwd("~/Desktop/Selection_simulations")
 rm(list=ls())
 library(tidyverse)
 library(reticulate)
-FrequencyDependent <- import_from_path("FrequencyDependent", path = "./Selection/")
-Bentley <- import_from_path("Bentley", path = "./Selection/")
+
 Models <- import_from_path("Models", path = "./Selection/")
+
+num_generations <- 100
+pop_size <- 250
+mu <- 0.004
+selection <- 0
 ```
 
 Run neutral Wright-Fisher with mutation
 ```{r}
-num_generations <- 1000
-pop_size <- 250
-mu <- 0.004
-selection <- 0
 aDF <- Models$WrightFisherRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
+
+aDF %>%
+  ggplot(aes(x=generation, y=count, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none") 
 ```
 
 Run Moran
 ```{r}
+aDF <- Models$MoranRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
 
+aDF %>%
+  ggplot(aes(x=generation, y=count, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none")
+```
+
+Run Yule - only for 10 generations starting with 10 individuals since it takes so long
+```{r}
+aDF <- Models$YuleRun(as.integer(10), as.integer(10), mu, selection, as.integer(10))
+
+counts <- 
+  aDF %>%
+  group_by(generation) %>%
+  summarise(n=sum(count))
+
+# normalise counts
+aDF %>%
+  mutate(freq = count / counts$n[match(generation, counts$generation)]) %>%
+  ggplot(aes(x=generation, y=freq, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none")
 ```
 

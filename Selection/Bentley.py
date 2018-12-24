@@ -25,6 +25,9 @@ class Population:
         if aMax < aNumber:
             self.setMax(aNumber)
 
+    def killIndividual(self, aIndividual):
+        self.members.remove(aIndividual)
+
     def getIndividuals(self):
         return self.members
 
@@ -64,6 +67,7 @@ class Population:
         return (self.getNumberCount() / self.getPopSize()).mean()
 
     def calculateAllFreq(self):
+        self.cnt = collections.Counter()
         for people in self.members:
             a_number = people.getNumber()
             self.cnt[a_number] += 1
@@ -138,7 +142,10 @@ def getArray(lPops):
 
 def getFlatList(lPops):
     aArray = getArray(lPops)
-    return aArray.flatten()
+    lFlat = []
+    for i, pop in enumerate(lPops):
+        lFlat += aArray[i]
+    return lFlat
 
 
 def getCounts(lPops):
