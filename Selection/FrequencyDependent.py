@@ -53,9 +53,8 @@ def populationReproduceYule(aPopulation, aMu0, aBeta):
 
     for i in range(0, aPopSize):
         lParents = bPopulation.getIndividuals()
-        aPopSize = bPopulation.getPopSize()
         parent_weight = calculate_weight(bPopulation, lParents,
-                                         aPopSize, aBeta)
+                                         bPopulation.getPopSize(), aBeta)
         # pick individual to reproduce
         aRand = np.random.choice(aPopSize, size=1, p=parent_weight)[0]
         aIndividual = Bentley.createOffspring(lParents[aRand], aMu0,

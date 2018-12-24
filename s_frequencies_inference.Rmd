@@ -1,6 +1,6 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output: html_notebook, pdf_document
 ---
 
 # Purpose of this notebook
@@ -124,7 +124,7 @@ initFn <- function(){
        delta=0.005)
 }
 ```
-
+# Neutral Wright-Fisher with mutation
 Run neutral Wright-Fisher with mutation
 ```{r}
 num_generations <- 1000
@@ -141,16 +141,16 @@ aDF_short %>%
 ```
 
 
-# Fit model to neutral data
+Fit model to neutral data
 ```{r, results=F}
-colnames(aDF_short) <- c("generation", "variant", "count")
 data_stan <- fPrepareAll(aDF_short)
 fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
                 init=initFn)
 saveRDS(fit, file = "neutral_example.rds")
 ```
 
-Run positive-frequency dependence Wright-Fisher with mutation
+# Positive frequency dependence Wright-Fisher with mutation
+Run positive frequency dependence 
 ```{r}
 selection <- 0.5
 aDF_short <- Models$WrightFisherRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
@@ -162,18 +162,18 @@ aDF_short %>%
   theme(legend.position = "none") 
 ```
 
-# Fit model to positive frequency-dependence data
+Fit model to positive frequency-dependence data
 ```{r, results=F}
-colnames(aDF_short) <- c("generation", "variant", "count")
 data_stan <- fPrepareAll(aDF_short)
 fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
                 init=initFn)
 saveRDS(fit, file = "positive_example.rds")
 ```
 
-Run negative frequency dependence Wright-Fisher with mutation
+# Negative frequency-dependent Wright-Fisher with mutation
+Run negative frequency dependence Wright-Fisher
 ```{r}
-selection <- 0
+selection <- -0.5
 aDF_short <- Models$WrightFisherRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
 
 aDF_short %>%
@@ -184,17 +184,15 @@ aDF_short %>%
 ```
 
 
-# Fit model to negative frequency-dependence data
+Fit model to negative frequency-dependence data
 ```{r, results=F}
-aDF_short <- read.csv("time_series_negative.csv")[, -1]
-colnames(aDF_short) <- c("generation", "variant", "count")
 data_stan <- fPrepareAll(aDF_short)
 fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
                 init=initFn)
 saveRDS(fit, file = "negative_example.rds")
 ```
 
-# Examining results
+# Examining estimated versus actual parameters of Wright-Fisher
 ## Selection
 ```{r}
 neutral <- readRDS('neutral_example.rds')
