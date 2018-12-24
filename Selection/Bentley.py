@@ -144,7 +144,7 @@ def getFlatList(lPops):
     aArray = getArray(lPops)
     lFlat = []
     for i, pop in enumerate(lPops):
-        lFlat += aArray[i]
+        lFlat += list(aArray[i])
     return lFlat
 
 

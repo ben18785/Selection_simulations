@@ -3,13 +3,19 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+# Purpose of this notebook
+Here I demonstrate how parameters from the Wright-Fisher model with frequency-dependent selection can be inferred from time series data
+
 # Functions to analyse and infer data
 Functions to read in data output from Python simulations
 ```{r}
 rm(list=ls())
 library(rstan)
 library(tidyverse)
+library(reticulate)
 options(mc.cores=4)
+
+Models <- import_from_path("Models", path = "./Selection/")
 
 # Get first time when each variant appears
 fConvertTime <- function(aDF_data){
@@ -119,9 +125,24 @@ initFn <- function(){
 }
 ```
 
+Run neutral Wright-Fisher with mutation
+```{r}
+num_generations <- 1000
+pop_size <- 250
+mu <- 0.004
+selection <- 0
+aDF_short <- Models$WrightFisherRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
+
+aDF_short %>%
+  ggplot(aes(x=generation, y=count, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none") 
+```
+
+
 # Fit model to neutral data
 ```{r, results=F}
-aDF_short <- read.csv("time_series_neutral.csv")[, -1]
 colnames(aDF_short) <- c("generation", "variant", "count")
 data_stan <- fPrepareAll(aDF_short)
 fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
@@ -129,15 +150,39 @@ fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
 saveRDS(fit, file = "neutral_example.rds")
 ```
 
+Run positive-frequency dependence Wright-Fisher with mutation
+```{r}
+selection <- 0.5
+aDF_short <- Models$WrightFisherRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
+
+aDF_short %>%
+  ggplot(aes(x=generation, y=count, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none") 
+```
+
 # Fit model to positive frequency-dependence data
 ```{r, results=F}
-aDF_short <- read.csv("time_series_positive.csv")[, -1]
 colnames(aDF_short) <- c("generation", "variant", "count")
 data_stan <- fPrepareAll(aDF_short)
 fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
                 init=initFn)
 saveRDS(fit, file = "positive_example.rds")
 ```
+
+Run negative frequency dependence Wright-Fisher with mutation
+```{r}
+selection <- 0
+aDF_short <- Models$WrightFisherRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
+
+aDF_short %>%
+  ggplot(aes(x=generation, y=count, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none") 
+```
+
 
 # Fit model to negative frequency-dependence data
 ```{r, results=F}
