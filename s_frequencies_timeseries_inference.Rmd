@@ -1,0 +1,196 @@
+---
+title: "WF time series Inference"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+# Purpose of this notebook
+Inferring frequency-dependent selection from time series data
+
+# Functions to analyse and infer data
+Functions to read in data output from Python simulations
+```{r}
+rm(list=ls())
+library(rstan)
+library(tidyverse)
+library(reticulate)
+options(mc.cores=4)
+```````
+data
+```{r}
+d<-read.csv("WF_generations4001_5000_allselectionlevels.csv", header=TRUE)
+d<-subset(d, S=="0")
+``````
+subset to the number of generations to analyse. 
+We will do:
+100 generations,<=4100
+25 generations, <=4126
+10 generations, <=4126
+2 generations, <=4003
+
+```{r}
+aDF_short<-subset(d, generation<= 4100)
+length(unique(aDF_short$generation))
+````
+
+``````{r}
+# Get first time when each variant appears
+fConvertTime <- function(aDF_data){
+  lTimeOld <- unique(aDF_data$generation)
+  aTimeLookup <- data.frame(old=lTimeOld,new=seq_along(lTimeOld))
+  aDF_copy <- aDF_data
+  aDF_copy$generation <- aTimeLookup$new[match(aDF_copy$generation,aTimeLookup$old)]
+  return(aDF_copy)
+}
+
+# Convert variants
+fConvertVariants <- function(aDF_data){
+  lVarOld <- unique(aDF_data$variant)
+  aVarLookup <- data.frame(old=lVarOld,new=seq_along(lVarOld))
+  aDF_copy <- aDF_data
+  aDF_copy$variant <- aVarLookup$new[match(aDF_copy$variant,aVarLookup$old)]
+  aDF_copy <- aDF_copy[order(aDF_copy$generation,aDF_copy$variant),]
+  return(aDF_copy)
+}
+
+fGetVariantAppearance <- function(aDF_data){
+  lVariant <- unique(aDF_data$variant)
+  aFirstAppearanceDF <- data.frame(variant=lVariant,appearance=vector(length = length(lVariant)))
+  for(i in seq_along(lVariant)){
+    aTempDF <- aDF_data[aDF_data$variant==lVariant[i],]
+    aFirstAppearanceDF$appearance[i] <- aTempDF$generation[1]
+  }
+  return(aFirstAppearanceDF)
+}
+````````
+## Get mutant count in each generation
+`````{r}
+fcountMutants <- function(aGeneration,aDF_data){
+  lGens <- aGeneration:(aGeneration + 1)
+  aDF_temp <- aDF_data[aDF_data$generation%in%lGens,]
+  lVariant_1 <- aDF_temp$variant[aDF_temp$generation==aGeneration]
+  lVariant_2 <- aDF_temp$variant[aDF_temp$generation==(aGeneration+1)]
+  lMutantVariant <- setdiff(lVariant_2,lVariant_1)
+  aMutantDF <- aDF_temp[aDF_temp$variant%in%lMutantVariant,]
+  aCount <- sum(aMutantDF$count)
+  # print(aCount)
+  # stopifnot(all.equal(aMutantDF$count,rep(1,nrow(aMutantDF))))
+  return(aCount)
+}
+
+fMutantCountsAll <- function(aDF_data){
+  aLen <- length(unique(aDF_data$generation))
+  lMutantCount <- vector(length=(aLen-1))
+  for(i in 1:(aLen-1)){
+    lMutantCount[i] <- fcountMutants(i,aDF_data)
+  }
+  return(lMutantCount)
+}
+
+## Create matrix of counts for variants (rows) and generations (cols)
+fGetCounts <- function(aDF_short){
+  aDF_short <- fConvertVariants(aDF_short)
+  K <- length(unique(aDF_short$variant))
+  N <- max(aDF_short$generation)
+  mCounts <- matrix(nrow = K,ncol = N)
+  for(i in 1:N){
+    aTempDF <- aDF_short[aDF_short$generation==i,]
+    for(j in 1:nrow(aTempDF)){
+      mCounts[aTempDF$variant[j],i] <- aTempDF$count[j]
+    }
+  }
+  mCounts[is.na(mCounts)] <- 0
+  return(mCounts)
+}
+
+## Active variant count
+fGetActiveVariantCount <- function(mCounts){
+  N <- ncol(mCounts)
+  lActiveCount <- vector(length=N)
+  for(i in 1:N){
+    lTemp <- mCounts[,i]
+    lTemp <- which(lTemp!=0,arr.ind = T)
+    lActiveCount[i] <- max(lTemp)
+  }
+  return(lActiveCount) 
+}
+
+fPrepareAll <- function(aDF_short){
+  lMutantCount <- fMutantCountsAll(aDF_short)
+  aFirstAppearances <- fGetVariantAppearance(aDF_short)
+  mCounts <- fGetCounts(aDF_short)
+  aDF_short <- fConvertTime(aDF_short)
+  aDF_short <- fConvertVariants(aDF_short)
+  K <- length(unique(aDF_short$variant))
+  N <- max(aDF_short$generation)
+  lActiveCount <- fGetActiveVariantCount(mCounts)
+  data=list(N=N,K=K,firstAppearance=aFirstAppearances$appearance,
+                                 mutantCounts=lMutantCount,
+                                 counts=mCounts,
+                                 activeVariantCount=lActiveCount)
+  return(data)
+}
+
+```
+
+Inference using Stan
+```{r, echo=F, results=F}
+aModel <- stan_model('multinomial_freqDep_homogeneous.stan')
+
+initFn <- function(){
+  list(s=0,
+       delta=0.005)
+}
+```
+Fit model to negative frequency-dependence data
+```{r, results=F}
+data_stan <- fPrepareAll(aDF_short)
+fit <- sampling(aModel,data=data_stan,iter=200,chains=4,
+                init=initFn)
+saveRDS(fit, file = "WF_s0_g2.rds")
+```
+
+# Examining estimated versus actual parameters of Wright-Fisher
+## Selection
+
+neutral <- readRDS('neutral_example.rds')
+positive <- readRDS('positive_example.rds')
+negative <- readRDS('negative_example.rds')
+
+alen <- length(rstan::extract(negative)$s)
+aTempDF <- tibble(estimated=c(rstan::extract(negative)$s,
+                      rstan::extract(neutral)$s,
+                      rstan::extract(positive)$s),
+                  classification=c(rep("negative", alen),
+                           rep("neutral", alen),
+                           rep("positive", alen)))
+aTempDF$actual <- c(rep(-0.5, alen), rep(0, alen), rep(0.5, alen))
+ggplot(aTempDF, aes(x=estimated)) + 
+  geom_histogram() +
+  geom_vline(aes(xintercept = actual), linetype=2, colour="orange") +
+  facet_wrap(~classification) +
+  theme_classic()
+```
+
+Looks good! The actual vs fitted correspond in each case.
+
+## Mutation rate
+
+alen <- length(rstan::extract(negative)$s)
+aTempDF <- tibble(estimated=c(rstan::extract(negative)$delta,
+                      rstan::extract(neutral)$delta,
+                      rstan::extract(positive)$delta),
+                  classification=c(rep("negative", alen),
+                           rep("neutral", alen),
+                           rep("positive", alen)))
+aTempDF$actual <- c(rep(0.004, alen), rep(0.004, alen), rep(0.004, alen))
+ggplot(aTempDF, aes(x=estimated)) + 
+  geom_histogram() +
+  geom_vline(aes(xintercept = actual), linetype=2, colour="orange") +
+  facet_wrap(~classification) +
+  theme_classic() + 
+  coord_flip()
+```
