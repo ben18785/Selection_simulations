@@ -39,9 +39,9 @@ aDF %>%
   theme(legend.position = "none")
 ```
 
-Run Yule - only for 10 generations starting with 10 individuals since it takes so long
+Run Yule - for 1000 generations starting with 1 individual, with a higher mutation rate
 ```{r}
-aDF <- Models$YuleRun(as.integer(10), as.integer(10), mu, selection, as.integer(10))
+aDF <- Models$YuleRun(as.integer(1000), as.integer(1), 0.04, selection, as.integer(1))
 
 counts <- 
   aDF %>%
