@@ -1,4 +1,4 @@
-*.csv
+Results/
 .DS_Store
 *.pyc
 Selection/FrequencyDependent.pyc
