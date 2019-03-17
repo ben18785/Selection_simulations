@@ -85,6 +85,11 @@ def createOffspring(aParent, aMu, aPopulation):
     return Individual(aNumber)
 
 
+def createOffspring_simple(aParent_number, aMu, aPopulation):
+    aParent = Individual(aParent_number)
+    return createOffspring(aParent, aMu, aPopulation)
+
+
 def getUnique(lTemp):
     return list(set(lTemp))
 

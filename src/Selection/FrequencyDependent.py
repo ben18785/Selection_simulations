@@ -1,6 +1,7 @@
 import Bentley
 import numpy as np
 import copy
+import random
 
 
 # Wright-Fisher/Bentley
@@ -24,42 +25,39 @@ def populationReproduceFrequency(aPopulation, aMu0, aBeta):
 # For Moran where you just pick one parent and reproduce (this can be weighted)
 # and you kill any parent at random
 def populationReproduceMoran(aPopulation, aMu0, aBeta):
-    bPopulation = copy.deepcopy(aPopulation)
-    aPopSize = bPopulation.getPopSize()
+    aPopSize = aPopulation.getPopSize()
 
     # pick one parent to reproduce (using weights) and one to kill per cycle
-    lParents = bPopulation.getIndividuals()
-    parent_weight = calculate_weight(bPopulation, lParents,
-                                     aPopSize, aBeta)
+    weighted_choices = aPopulation.getAllFreq()
+    lParents = aPopulation.getIndividuals()
+
     # pick individual to reproduce
-    aRand = np.random.choice(aPopSize, size=1, p=parent_weight)[0]
-    aIndividual = Bentley.createOffspring(lParents[aRand], aMu0,
-                                          bPopulation)
-    bPopulation.addIndividual(aIndividual)
+    aParent_number = random.choice(list(weighted_choices.elements()))
+    aIndividual = Bentley.createOffspring_simple(aParent_number, aMu0,
+                                                 aPopulation)
+    aPopulation.addIndividual(aIndividual)
+    aPopulation.cnt[aParent_number] += 1
 
     # pick individual to kill
     bRand = np.random.randint(aPopSize)
-    bPopulation.killIndividual(lParents[bRand])
-    assert bPopulation.getPopSize() == aPopSize
-    bPopulation.calculateAllFreq()
-    return bPopulation
+    aPopulation.killIndividual(lParents[bRand])
+    aPopulation.cnt[lParents[bRand]] -= 1
+    assert aPopulation.getPopSize() == aPopSize
+    assert aPopSize == sum(aPopulation.cnt.values())
+    return aPopulation, aIndividual, lParents[bRand]
 
 
 # Same as Moran but no one dies (i.e. population grows)
 def populationReproduceYule(aPopulation, aMu0, aBeta):
-    bPopulation = copy.deepcopy(aPopulation)
-    aPopSize = bPopulation.getPopSize()
+    weighted_choices = aPopulation.getAllFreq()
 
-    lParents = bPopulation.getIndividuals()
-    parent_weight = calculate_weight(bPopulation, lParents,
-                                     bPopulation.getPopSize(), aBeta)
     # pick individual to reproduce
-    aRand = np.random.choice(aPopSize, size=1, p=parent_weight)[0]
-    aIndividual = Bentley.createOffspring(lParents[aRand], aMu0,
-                                          bPopulation)
-    bPopulation.addIndividual(aIndividual)
-    bPopulation.calculateAllFreq()
-    return bPopulation
+    aParent_number = random.choice(list(weighted_choices.elements()))
+    aIndividual = Bentley.createOffspring_simple(aParent_number, aMu0,
+                                                 aPopulation)
+    aPopulation.addIndividual(aIndividual)
+    aPopulation.cnt[aIndividual.getNumber()] += 1
+    return aPopulation, aIndividual
 
 
 def runAllFrequency(aNumGenerations, aPopSize, aMu0, aBeta, aMax):
@@ -78,33 +76,33 @@ def runAllFrequency(aNumGenerations, aPopSize, aMu0, aBeta, aMax):
 
 
 def runAllMoranFrequency(aNumGenerations, aPopSize, aMu0, aBeta, aMax):
-    lPops = []
+    lAdded = np.zeros(aNumGenerations, dtype='int')
+    lKilled = np.zeros(aNumGenerations, dtype='int')
     aInitialPopulation = Bentley.createInitialPopulation(aPopSize, aMax)
-    lPops.append(aInitialPopulation)
+    aParents = copy.deepcopy(aInitialPopulation)
     lExisting = list(set(aInitialPopulation.getNumbers()))
     for generations in range(1, aNumGenerations):
         # print(generations)
-        aParents = lPops[generations-1]
         lExisting = lExisting + aParents.getNumbers()
         lExisting = list(set(lExisting))
-        aChildren = populationReproduceMoran(aParents, aMu0, aBeta)
-        lPops.append(aChildren)
-    return lPops
+        aParents, addedIndividual, killedIndividual = (
+                populationReproduceMoran(aParents, aMu0, aBeta)
+            )
+        lAdded[generations] = addedIndividual.getNumber()
+        lKilled[generations] = killedIndividual.getNumber()
+    return aInitialPopulation, lAdded, lKilled
 
 
 def runAllYuleFrequency(aNumGenerations, aPopSize, aMu0, aBeta, aMax):
-    lPops = []
+    lAdded = np.zeros(aNumGenerations, dtype='int')
     aInitialPopulation = Bentley.createInitialPopulation(aPopSize, aMax)
-    lPops.append(aInitialPopulation)
-    lExisting = list(set(aInitialPopulation.getNumbers()))
+    aParents = copy.deepcopy(aInitialPopulation)
     for generations in range(1, aNumGenerations):
         # print(generations)
-        aParents = lPops[generations-1]
-        lExisting = lExisting + aParents.getNumbers()
-        lExisting = list(set(lExisting))
-        aChildren = populationReproduceYule(aParents, aMu0, aBeta)
-        lPops.append(aChildren)
-    return lPops
+        aParents, addedIndividual = populationReproduceYule(
+            aParents, aMu0, aBeta)
+        lAdded[generations] = addedIndividual.getNumber()
+    return aInitialPopulation, lAdded
 
 
 def replicates(i, bName, aNumIter, aNumGenerations, aPopSize, aMu0, aBeta,
