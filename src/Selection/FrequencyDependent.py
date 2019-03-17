@@ -28,21 +28,20 @@ def populationReproduceMoran(aPopulation, aMu0, aBeta):
     aPopSize = bPopulation.getPopSize()
 
     # pick one parent to reproduce (using weights) and one to kill per cycle
-    for i in range(0, aPopSize):
-        lParents = bPopulation.getIndividuals()
-        parent_weight = calculate_weight(bPopulation, lParents,
-                                         aPopSize, aBeta)
-        # pick individual to reproduce
-        aRand = np.random.choice(aPopSize, size=1, p=parent_weight)[0]
-        aIndividual = Bentley.createOffspring(lParents[aRand], aMu0,
-                                              bPopulation)
-        bPopulation.addIndividual(aIndividual)
+    lParents = bPopulation.getIndividuals()
+    parent_weight = calculate_weight(bPopulation, lParents,
+                                     aPopSize, aBeta)
+    # pick individual to reproduce
+    aRand = np.random.choice(aPopSize, size=1, p=parent_weight)[0]
+    aIndividual = Bentley.createOffspring(lParents[aRand], aMu0,
+                                          bPopulation)
+    bPopulation.addIndividual(aIndividual)
 
-        # pick individual to kill
-        bRand = np.random.randint(aPopSize)
-        bPopulation.killIndividual(lParents[bRand])
-        assert bPopulation.getPopSize() == aPopSize
-        bPopulation.calculateAllFreq()
+    # pick individual to kill
+    bRand = np.random.randint(aPopSize)
+    bPopulation.killIndividual(lParents[bRand])
+    assert bPopulation.getPopSize() == aPopSize
+    bPopulation.calculateAllFreq()
     return bPopulation
 
 
