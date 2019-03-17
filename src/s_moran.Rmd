@@ -1,0 +1,70 @@
+---
+title: "Generating Moran populations"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+#### Purpose of this notebook
+To generate populations using Ben's new selection function. 
+
+### To do
+This currently generates one Moran population, with one selection level (0), for 5000000 time steps. But, we have to generate populations with several selection levels, S:
+
+0
+-0.01
+-0.25
+-0.5
+-0.75
+
+So this has to be wrapped in a function that steps through the selection levels and run on an HPC.
+
+NOTE: this is a wrapper for python functions which are in another folder and have to be called in "models"
+
+### Functions to analyse and infer data
+Functions to read in data output from Python simulations
+```{r}
+rm(list=ls())
+Sys.setenv(RSTUDIO_PANDOC="/anaconda3/bin/pandoc")
+library(rstan)
+library(tidyverse)
+library(reticulate)
+options(mc.cores=4)
+```
+These python modules contain the generating models.
+```{r}
+Models <- import_from_path("Models", path = "./Selection/")
+```
+ The reason Moran needs so long is because we run 5000 generations for WF and 5000x1000 to give equivalence for Moran.
+ general population parameters. Don't change.
+```{r}
+num_generations <- 5000000
+pop_size <- 1000
+mu <- 0.001
+```
+# Negative frequency-dependent Moran with mutation
+
+Set the selection coefficient. Desired values are: 0, -0.1, -0.2, -0.5, -0.75
+```{r}
+selection <-0
+```
+Run the model
+```{r}
+aDF_short <- Models$MoranRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
+# plot function (optional)
+aDF_short %>%
+  ggplot(aes(x=generation, y=count, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none") 
+```
+
+```
+write to file
+```{r}
+filename<-paste("Moran", "mu", mu, "S_minus", selection, ".csv", sep="_")
+write.csv(aDF_short, "Yule_mu001_s_minus0_10.csv")
+```
+

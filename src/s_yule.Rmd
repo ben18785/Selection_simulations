@@ -1,0 +1,69 @@
+---
+title: "Generating Yule populations"
+output:
+  html_document:
+    df_print: paged
+editor_options:
+  chunk_output_type: inline
+---
+
+#### Purpose of this notebook
+To generate populations using Ben's new selection function. 
+
+### To do
+This currently generates one Yule population, with one selection level (0), for 500,000 time steps. But, we have to generate populations with several selection levels, S:
+
+0
+-0.01
+-0.25
+-0.5
+-0.75
+
+This has to be wrapped in a function that steps through the selection levels and run on an HPC since 500,000 generations takes a long time. NOTE: 500k was based on Charlie's previous simulations using, i think, a higher mutation rate.  It is possible that we need more in order to generate enough variatns to get a reasnable powerlaw distrbution. this is a matter of look-see. 
+
+NOTE: this is a wrapper for python functions which are in another folder and have to be called in "models"
+
+### Functions to analyse and infer data
+Functions to read in data output from Python simulations
+```{r}
+rm(list=ls())
+Sys.setenv(RSTUDIO_PANDOC="/anaconda3/bin/pandoc")
+library(rstan)
+library(tidyverse)
+library(reticulate)
+options(mc.cores=4)
+```
+
+These python modules contain the generating models.
+```{r}
+Models <- import_from_path("Models", path = "./Selection/")
+```
+
+general population parameters. These do not change (unless you want to test Yule on a shorter run, then change num_generations.)
+```{r}
+num_generations <- 50000# just for testing, needs to be 500,000 in reality
+pop_size <- 1 
+mu <- 0.001 
+```
+
+Set the selection coefficient. Desired values are: 0, -0.1, -0.25 or -0.5
+```{r}
+selection <-0
+```
+Run the model
+```{r}
+aDF_short <- Models$YuleRun(as.integer(num_generations), as.integer(pop_size), mu, selection, as.integer(pop_size))
+```
+plot
+```{r}
+aDF_short %>%
+  ggplot(aes(x=generation, y=count, fill=as.factor(variant))) +
+  geom_area(position = "stack") +
+  theme_classic() +
+  theme(legend.position = "none") 
+```
+write to file
+```{r}
+filename<-paste("Yule", "mu", mu, "S_minus", selection, ".csv", sep="_")
+write.csv(aDF_short, "Yule_mu001_s_minus0_10.csv")
+```
