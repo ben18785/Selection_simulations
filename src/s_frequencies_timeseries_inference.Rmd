@@ -18,12 +18,12 @@ library(rstan)
 library(tidyverse)
 library(reticulate)
 options(mc.cores=4)
-```````
+```
 data
 ```{r}
 d<-read.csv("WF_generations4001_5000_allselectionlevels.csv", header=TRUE)
 d<-subset(d, S=="0")
-``````
+```
 subset to the number of generations to analyse. 
 We will do:
 100 generations,<=4100
@@ -34,9 +34,9 @@ We will do:
 ```{r}
 aDF_short<-subset(d, generation<= 4100)
 length(unique(aDF_short$generation))
-````
+```
 
-``````{r}
+```{r}
 # Get first time when each variant appears
 fConvertTime <- function(aDF_data){
   lTimeOld <- unique(aDF_data$generation)
@@ -65,9 +65,9 @@ fGetVariantAppearance <- function(aDF_data){
   }
   return(aFirstAppearanceDF)
 }
-````````
+```
 ## Get mutant count in each generation
-`````{r}
+```{r}
 fcountMutants <- function(aGeneration,aDF_data){
   lGens <- aGeneration:(aGeneration + 1)
   aDF_temp <- aDF_data[aDF_data$generation%in%lGens,]
@@ -155,7 +155,7 @@ saveRDS(fit, file = "WF_s0_g2.rds")
 
 # Examining estimated versus actual parameters of Wright-Fisher
 ## Selection
-
+```{r}
 neutral <- readRDS('neutral_example.rds')
 positive <- readRDS('positive_example.rds')
 negative <- readRDS('negative_example.rds')
@@ -178,7 +178,7 @@ ggplot(aTempDF, aes(x=estimated)) +
 Looks good! The actual vs fitted correspond in each case.
 
 ## Mutation rate
-
+```{r}
 alen <- length(rstan::extract(negative)$s)
 aTempDF <- tibble(estimated=c(rstan::extract(negative)$delta,
                       rstan::extract(neutral)$delta,
