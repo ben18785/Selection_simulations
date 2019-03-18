@@ -19,6 +19,7 @@ log_max <- log10(max(generations))
 log_uniform <- seq(log_min, log_max, length.out = 20)
 breaks <- 10^log_uniform
 breaks <- breaks[breaks >= 5]
+saveRDS(breaks, "../data/inference/breaks.rds")
 aDF_short <- subset(d, generation <= breaks[a_break])
 
 aModel <- stan_model('multinomial_freqDep_homogeneous.stan')

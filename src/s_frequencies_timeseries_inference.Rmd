@@ -197,8 +197,20 @@ ggplot(aTempDF, aes(x=estimated)) +
 
 ## Look at simulation results
 ```{r}
-fit <- readRDS("../data/inference/WF_s_0_break_6.rds")
-print(fit)
-hist(rstan::extract(fit, 's')[[1]])
+breaks <- round(readRDS("../data/inference/breaks.rds"))
+a_max <- 15
+lLower <- vector(length = (a_max - 1))
+lUpper <- vector(length = (a_max - 1))
+for(i in 2:15){
+  fit <- readRDS(paste0("../data/inference/WF_s_0_break_", i, ".rds"))
+  params <- rstan::extract(fit, 's')[[1]]
+  lLower[i] <- quantile(params, 0.025)
+  lUpper[i] <- quantile(params, 0.975)
+}
+
+tibble(lower=lLower, upper=lUpper, breaks=breaks) %>%
+  ggplot(aes(x=breaks)) +
+  geom_ribbon(aes(ymin=lower, ymax=upper)) +
+  scale_x_log10()
 ```
 
