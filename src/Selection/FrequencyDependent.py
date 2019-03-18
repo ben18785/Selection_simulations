@@ -89,7 +89,7 @@ def runAllMoranFrequency(aNumGenerations, aPopSize, aMu0, aBeta, aMax):
     lExisting = list(set(aInitialPopulation.getNumbers()))
     for generations in range(1, aNumGenerations):
         if generations % 10000 == 0:
-            print('Moran with section: ' + str(aBeta) +
+            print('Moran with selection: ' + str(aBeta) +
                   ', gen: ' + str(generations))
         lExisting = lExisting + aParents.getNumbers()
         lExisting = list(set(lExisting))
@@ -107,7 +107,7 @@ def runAllYuleFrequency(aNumGenerations, aPopSize, aMu0, aBeta, aMax):
     aParents = copy.deepcopy(aInitialPopulation)
     for generations in range(1, aNumGenerations):
         if generations % 10000 == 0:
-            print('Yule with section: ' + str(aBeta) +
+            print('Yule with selection: ' + str(aBeta) +
                   ', gen: ' + str(generations))
         aParents, addedIndividual = populationReproduceYule(
             aParents, aMu0, aBeta)
