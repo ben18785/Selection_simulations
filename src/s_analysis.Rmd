@@ -18,9 +18,7 @@ fGetFinalYule <- function(selection){
   aFinal <- c(changes$added, aInitial$X0[1])
   aFinal <- table(aFinal) %>%
     as.data.frame()
-  p <- aFinal$Freq
-  p <- p / sum(p)
-  return(p)
+  return(aFinal)
 }
 fDiversity <- function(p){
   div <- 0
@@ -35,6 +33,8 @@ fDiversity(fGetFinalYule("-0.1"))
 fDiversity(fGetFinalYule("-0.25"))
 fDiversity(fGetFinalYule("-0.5"))
 fDiversity(fGetFinalYule("-0.75"))
+test <- fGetFinalYule("-0.1")
+changes <- read.csv("../data/negative_yule_moran/yule_changes_-0.1.csv")
 ```
 
 Moran analysis
