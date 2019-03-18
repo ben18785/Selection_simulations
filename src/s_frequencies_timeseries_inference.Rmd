@@ -194,3 +194,11 @@ ggplot(aTempDF, aes(x=estimated)) +
   theme_classic() + 
   coord_flip()
 ```
+
+## Look at simulation results
+```{r}
+fit <- readRDS("../data/inference/WF_s_0_break_6.rds")
+print(fit)
+hist(rstan::extract(fit, 's')[[1]])
+```
+
