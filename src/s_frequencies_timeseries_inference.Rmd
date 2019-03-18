@@ -21,7 +21,7 @@ options(mc.cores=4)
 ```
 data
 ```{r}
-d<-read.csv("WF_generations4001_5000_allselectionlevels.csv", header=TRUE)
+d<-read.csv("../data/WF_generations4001_5000_allselectionlevels.csv", header=TRUE)
 d<-subset(d, S=="0")
 ```
 subset to the number of generations to analyse. 

@@ -1,0 +1,74 @@
+---
+title: "Variant frequencies"
+output: html_notebook
+---
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+```
+
+Yule analysis
+```{r}
+fGetFinalYule <- function(selection){
+  filename <- paste0("yule_initial_", selection, ".csv")
+  filename1 <- paste0("yule_changes_", selection, ".csv")
+  aInitial <- read.csv(paste0("../data/negative_yule_moran/", filename))
+  changes <- read.csv(paste0("../data/negative_yule_moran/", filename1))[-1, ]
+  aFinal <- c(changes$added, aInitial$X0[1])
+  aFinal <- table(aFinal) %>%
+    as.data.frame()
+  p <- aFinal$Freq
+  p <- p / sum(p)
+  return(p)
+}
+fDiversity <- function(p){
+  div <- 0
+  for(i in 1:length(p))
+    if(p[i] != 0)
+      div <- div + p[i] * log(p[i])
+  return(-div)
+}
+
+fDiversity(fGetFinalYule("0.0"))
+fDiversity(fGetFinalYule("-0.1"))
+fDiversity(fGetFinalYule("-0.25"))
+fDiversity(fGetFinalYule("-0.5"))
+fDiversity(fGetFinalYule("-0.75"))
+```
+
+Moran analysis
+```{r}
+fGetFinalMoran <- function(selection){
+  filename <- paste0("moran_initial_", selection, ".csv")
+  filename1 <- paste0("moran_changes_", selection, ".csv")
+  aInitial <- read.csv(paste0("../data/negative_yule_moran/", filename))
+  changes <- read.csv(paste0("../data/negative_yule_moran/", filename1))[-1, ]
+  added <- table(changes$added) %>%
+  as.data.frame() %>%
+  rename(add=Freq)
+  killed <- table(changes$killed) %>%
+    as.data.frame() %>%
+    rename(kill=Freq)
+  combined <- full_join(added, killed)
+  aInitial <- aInitial[, -1] %>%
+    rename(Var1=index, initial=X0) %>%
+    mutate(Var1=as.character(Var1))
+  combined <- full_join(combined, aInitial)
+  combined[is.na(combined)] <- 0
+  combined$Var1 <- as.numeric(combined$Var1)
+  combined <- combined[order(combined$Var1), ]
+  combined <- combined %>% 
+    mutate(final=initial + add - kill)
+  p <- combined$final
+  p <- p / sum(p)
+    return(p)
+}
+fDiversity(fGetFinalMoran("0.0"))
+fDiversity(fGetFinalMoran("-0.1"))
+fDiversity(fGetFinalMoran("-0.2"))
+fDiversity(fGetFinalMoran("-0.5"))
+fDiversity(fGetFinalMoran("-1.0"))
+
+```
+
