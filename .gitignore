@@ -1,3 +1,5 @@
+negative_yule_moran
+inference/
 Results/
 .DS_Store
 *.pyc

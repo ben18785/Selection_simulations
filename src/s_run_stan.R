@@ -16,8 +16,8 @@ d$generation <- d$generation - min(d$generation) + 1
 generations <- unique(d$generation)
 log_min <- log10(min(generations))
 log_max <- log10(max(generations))
-log_uniform <- seq(log_min, log_max, length.out = 20)
-breaks <- 10^log_uniform
+log_uniform <- seq(log_min, log_max, length.out = 50)
+breaks <- 10^(log_uniform)
 breaks <- breaks[breaks >= 5]
 saveRDS(breaks, "../data/inference/breaks.rds")
 aDF_short <- subset(d, generation <= breaks[a_break])

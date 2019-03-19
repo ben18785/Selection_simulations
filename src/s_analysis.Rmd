@@ -18,7 +18,9 @@ fGetFinalYule <- function(selection){
   aFinal <- c(changes$added, aInitial$X0[1])
   aFinal <- table(aFinal) %>%
     as.data.frame()
-  return(aFinal)
+  p <- aFinal$Freq
+  p <- p / sum(p)
+  return(p)
 }
 fDiversity <- function(p){
   div <- 0
@@ -33,8 +35,6 @@ fDiversity(fGetFinalYule("-0.1"))
 fDiversity(fGetFinalYule("-0.25"))
 fDiversity(fGetFinalYule("-0.5"))
 fDiversity(fGetFinalYule("-0.75"))
-test <- fGetFinalYule("-0.1")
-changes <- read.csv("../data/negative_yule_moran/yule_changes_-0.1.csv")
 ```
 
 Moran analysis
@@ -70,5 +70,60 @@ fDiversity(fGetFinalMoran("-0.2"))
 fDiversity(fGetFinalMoran("-0.5"))
 fDiversity(fGetFinalMoran("-1.0"))
 
+```
+
+Extract data that Armand needs
+```{r}
+fGetFinalYuleData <- function(selection){
+  filename <- paste0("yule_initial_", selection, ".csv")
+  filename1 <- paste0("yule_changes_", selection, ".csv")
+  aInitial <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename))
+  changes <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename1))[-1, ]
+  aFinal <- c(changes$added, aInitial$X0[1])
+  aFinal <- table(aFinal) %>%
+    as.data.frame()
+  saveRDS(aFinal, paste0("../data/negative_yule_moran/processed/yule_", selection, ".rds"))
+  return(aFinal)
+}
+
+aDF_0 <- fGetFinalYuleData("0.0")
+aDF_0.1 <- fGetFinalYuleData("-0.1")
+aDF_0.25 <- fGetFinalYuleData("-0.25")
+aDF_0.5 <- fGetFinalYuleData("-0.5")
+aDF_0.75 <- fGetFinalYuleData("-0.75")
+
+fGetFinalMoranData <- function(selection){
+  filename <- paste0("moran_initial_", selection, ".csv")
+  filename1 <- paste0("moran_changes_", selection, ".csv")
+  aInitial <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename))
+  changes <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename1))[-1, ]
+  added <- table(changes$added) %>%
+  as.data.frame() %>%
+  rename(add=Freq)
+  killed <- table(changes$killed) %>%
+    as.data.frame() %>%
+    rename(kill=Freq)
+  combined <- full_join(added, killed)
+  aInitial <- aInitial[, -1] %>%
+    rename(Var1=index, initial=X0) %>%
+    mutate(Var1=as.character(Var1))
+  combined <- full_join(combined, aInitial)
+  combined[is.na(combined)] <- 0
+  combined$Var1 <- as.numeric(combined$Var1)
+  combined <- combined[order(combined$Var1), ]
+  combined <- combined %>% 
+    mutate(final=initial + add - kill) %>%
+    filter(final>0) %>% 
+    select(Var1, final) %>% 
+    rename(Freq=final)
+  saveRDS(combined, paste0("../data/negative_yule_moran/processed/moran_", selection, ".rds"))
+    return(combined)
+}
+
+aDF <- fGetFinalMoranData("0.0")
+aDF <- fGetFinalMoranData("-0.1")
+aDF <- fGetFinalMoranData("-0.2")
+aDF <- fGetFinalMoranData("-0.5")
+aDF <- fGetFinalMoranData("-1.0")
 ```
 

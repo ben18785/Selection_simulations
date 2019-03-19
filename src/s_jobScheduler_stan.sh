@@ -6,7 +6,7 @@ chmod +x *.sh
 run_selection()
 {
   selection=$1
-  for i in {2..15}
+  for i in {2..38}
   do
    Rscript s_run_stan.R $selection $i
   done

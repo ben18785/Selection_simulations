@@ -197,20 +197,51 @@ ggplot(aTempDF, aes(x=estimated)) +
 
 ## Look at simulation results
 ```{r}
-breaks <- round(readRDS("../data/inference/breaks.rds"))
-a_max <- 15
-lLower <- vector(length = (a_max - 1))
-lUpper <- vector(length = (a_max - 1))
-for(i in 2:15){
-  fit <- readRDS(paste0("../data/inference/WF_s_0_break_", i, ".rds"))
-  params <- rstan::extract(fit, 's')[[1]]
-  lLower[i] <- quantile(params, 0.025)
-  lUpper[i] <- quantile(params, 0.975)
+fGetFitted <- function(breaks, s){
+  a_max <- length(breaks)
+  lLower <- vector(length = (a_max - 1))
+  lUpper <- vector(length = (a_max - 1))
+  for(i in 2:a_max){
+    fit <- readRDS(paste0("../data/inference/WF_s_", s, "_break_", i, ".rds"))
+    params <- rstan::extract(fit, 's')[[1]]
+    lLower[i] <- quantile(params, 0.025)
+    lUpper[i] <- quantile(params, 0.975)
+  }
+  aDF_0 <- tibble(lower=lLower, upper=lUpper, breaks=breaks) %>% 
+    mutate(s=s)
+  return(aDF_0)
 }
 
-tibble(lower=lLower, upper=lUpper, breaks=breaks) %>%
-  ggplot(aes(x=breaks)) +
-  geom_ribbon(aes(ymin=lower, ymax=upper)) +
-  scale_x_log10()
+breaks <- round(readRDS("../data/inference/breaks.rds"))
+
+aDF_0 <- fGetFitted(breaks, 0)
+aDF_0.25 <- fGetFitted(breaks, -0.25)
+aDF_0.5 <- fGetFitted(breaks, -0.5)
+aDF_0.75 <- fGetFitted(breaks, -0.75)
+aDF_1 <- fGetFitted(breaks, -1)
+
+```
+
+```{r}
+aDF <- bind_rows(aDF_0,
+                 aDF_0.25,
+                 aDF_0.5,
+                 aDF_0.75,
+                 aDF_1) %>%
+  filter(breaks > 5)
+g <- 
+  aDF %>% 
+  ggplot(aes(x=breaks, fill=as.factor(s))) +
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.4) +
+  scale_x_log10() +
+  geom_hline(aes(yintercept=s, colour=as.factor(s)), linetype=2) +
+  xlab("Length of series") +
+  ylab("Selection") +
+  scale_fill_brewer("True\nselection", palette = "Dark2") +
+  scale_color_brewer(guide = 'none', palette = "Dark2") +
+  theme_classic()
+g
+ggsave("../outputs/estimated_vs_actual_selection.png", g, dpi = 500, width = 10, height = 6)
+saveRDS(aDF, "../data/inference/combined_inference.rds")
 ```
 
