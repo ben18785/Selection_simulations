@@ -13,8 +13,8 @@ Yule analysis
 fGetFinalYule <- function(selection){
   filename <- paste0("yule_initial_", selection, ".csv")
   filename1 <- paste0("yule_changes_", selection, ".csv")
-  aInitial <- read.csv(paste0("../data/negative_yule_moran/", filename))
-  changes <- read.csv(paste0("../data/negative_yule_moran/", filename1))[-1, ]
+  aInitial <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename))
+  changes <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename1))[-1, ]
   aFinal <- c(changes$added, aInitial$X0[1])
   aFinal <- table(aFinal) %>%
     as.data.frame()
@@ -42,8 +42,8 @@ Moran analysis
 fGetFinalMoran <- function(selection){
   filename <- paste0("moran_initial_", selection, ".csv")
   filename1 <- paste0("moran_changes_", selection, ".csv")
-  aInitial <- read.csv(paste0("../data/negative_yule_moran/", filename))
-  changes <- read.csv(paste0("../data/negative_yule_moran/", filename1))[-1, ]
+  aInitial <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename))
+  changes <- read.csv(paste0("../data/negative_yule_moran/raw_sims/", filename1))[-1, ]
   added <- table(changes$added) %>%
   as.data.frame() %>%
   rename(add=Freq)
@@ -91,6 +91,14 @@ aDF_0.1 <- fGetFinalYuleData("-0.1")
 aDF_0.25 <- fGetFinalYuleData("-0.25")
 aDF_0.5 <- fGetFinalYuleData("-0.5")
 aDF_0.75 <- fGetFinalYuleData("-0.75")
+aDF_0$s <- 0
+aDF_0.1$s <- -0.1
+aDF_0.25$s <- -0.25
+aDF_0.5$s <- -0.5
+aDF_0.75$s <- -0.75
+aDF <- bind_rows(aDF_0, aDF_0.1, aDF_0.25, aDF_0.5, aDF_0.75) %>% 
+  rename(variant=aFinal, freq=Freq)
+saveRDS(aDF, "../data/negative_yule_moran/processed/yule_combined.rds")
 
 fGetFinalMoranData <- function(selection){
   filename <- paste0("moran_initial_", selection, ".csv")
@@ -115,15 +123,19 @@ fGetFinalMoranData <- function(selection){
     mutate(final=initial + add - kill) %>%
     filter(final>0) %>% 
     select(Var1, final) %>% 
-    rename(Freq=final)
+    rename(Freq=final) %>% 
+    mutate(s=as.numeric(selection))
   saveRDS(combined, paste0("../data/negative_yule_moran/processed/moran_", selection, ".rds"))
     return(combined)
 }
 
-aDF <- fGetFinalMoranData("0.0")
-aDF <- fGetFinalMoranData("-0.1")
-aDF <- fGetFinalMoranData("-0.2")
-aDF <- fGetFinalMoranData("-0.5")
-aDF <- fGetFinalMoranData("-1.0")
+aDF_0 <- fGetFinalMoranData("0.0")
+aDF_0.1 <- fGetFinalMoranData("-0.1")
+aDF_0.2 <- fGetFinalMoranData("-0.2")
+aDF_0.5 <- fGetFinalMoranData("-0.5")
+aDF_1 <- fGetFinalMoranData("-1.0")
+aDF <- bind_rows(aDF_0, aDF_0.1, aDF_0.2, aDF_0.5, aDF_1)
+saveRDS(aDF, "../data/negative_yule_moran/processed/moran_combined.rds")
+
 ```
 
