@@ -201,13 +201,23 @@ fGetFitted <- function(breaks, s){
   a_max <- length(breaks)
   lLower <- vector(length = (a_max - 1))
   lUpper <- vector(length = (a_max - 1))
+  lMedian <- vector(length = (a_max - 1))
+  lMu_middle <- vector(length = (a_max - 1))
+  lMu_lower <- vector(length = (a_max - 1))
+  lMu_upper <- vector(length = (a_max - 1))
   for(i in 2:a_max){
     fit <- readRDS(paste0("../data/inference/WF_s_", s, "_break_", i, ".rds"))
     params <- rstan::extract(fit, 's')[[1]]
     lLower[i] <- quantile(params, 0.025)
     lUpper[i] <- quantile(params, 0.975)
+    lMedian[i] <- quantile(params, 0.5)
+    params <- rstan::extract(fit, 'delta')[[1]]
+    lMu_lower[i] <- quantile(params, 0.025)
+    lMu_upper[i] <- quantile(params, 0.975)
+    lMu_middle[i] <- quantile(params, 0.5)
   }
-  aDF_0 <- tibble(lower=lLower, upper=lUpper, breaks=breaks) %>% 
+  aDF_0 <- tibble(lower=lLower, upper=lUpper, middle=lMedian, breaks=breaks,
+                  mu_lower=lMu_lower, mu_middle=lMu_middle, mu_upper=lMu_upper) %>% 
     mutate(s=s)
   return(aDF_0)
 }
@@ -233,6 +243,7 @@ g <-
   aDF %>% 
   ggplot(aes(x=breaks, fill=as.factor(s))) +
   geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.4) +
+  geom_line(aes(y=middle, colour=as.factor(s))) +
   scale_x_log10() +
   geom_hline(aes(yintercept=s, colour=as.factor(s)), linetype=2) +
   xlab("Length of series") +
@@ -243,5 +254,22 @@ g <-
 g
 ggsave("../outputs/estimated_vs_actual_selection.png", g, dpi = 500, width = 10, height = 6)
 saveRDS(aDF, "../data/inference/combined_inference.rds")
+```
+Mu plot
+```{r}
+g <- 
+  aDF %>% 
+  ggplot(aes(x=breaks, fill=as.factor(s))) +
+  geom_ribbon(aes(ymin=mu_lower, ymax=mu_upper), alpha=0.4) +
+  geom_line(aes(y=mu_middle, colour=as.factor(s))) +
+  scale_x_log10() +
+  geom_hline(yintercept = 0.001, linetype=2) +
+  xlab("Length of series") +
+  ylab("Selection") +
+  scale_fill_brewer("True\nselection", palette = "Dark2") +
+  scale_color_brewer(guide = 'none', palette = "Dark2") +
+  theme_classic()
+g
+ggsave("../outputs/estimated_vs_actual_mu.png", g, dpi = 500, width = 10, height = 6)
 ```
 
